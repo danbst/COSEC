@@ -1,4 +1,5 @@
 #include <std/string.h>
+#include <dev/cpu.h>
 
 int strcmp(const char *s1, const char *s2) {
     while (1) {
@@ -24,20 +25,11 @@ inline int strlen(const char *s) {
 }
 
 void* memcpy(void *dest, const void *src, size_t size) {
-    asm("movl %0, %%edi \n" : : "r"(dest));
-    asm("movl %0, %%esi \n" : : "r"(src));
-    asm("movl %0, %%ecx \n" : : "r"(size));
-    asm("rep movsb"); 
-/*    int i;
-    char *d = dest, *s = src;
-    for (i = 0; i < size; ++i) 
-        d[i] = s[i]; */
-
+    arch_memcpy(dest, src, size);
     return dest;
 }
 
-inline void *
-memset(void *s, int c, size_t n) {
+inline void *memset(void *s, int c, size_t n) {
     char *p = (char *)s;
     unsigned i;
     for (i = 0; i < n; ++i)

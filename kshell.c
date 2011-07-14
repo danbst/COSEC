@@ -71,7 +71,7 @@ void print_cpu(void) {
     char buf[100];
     asm (" movl %0, %%eax \n" : : "r"(0xA5A5A5A5));
     asm (" movl %0, %%ebx \n" : : "r"(0xBBBBBBBB));
-    cpu_snapshot(buf);
+    //cpu_snapshot(buf);
     print_mem(buf, 100);    
 }
 

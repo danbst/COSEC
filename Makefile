@@ -8,7 +8,7 @@ as  :=  gcc
 ld  :=  ld
 
 cc_flags    := -ffreestanding -nostdinc -nostdlib -Wall -Wextra -Winline -O2 -MD 
-as_flags    := -Wall -MD $(addprefix -I, $(include_dir))
+as_flags    := -Wall -MD $(addprefix -I, $(include_dir)) -O2
 ld_flags    := -static -nostdlib -Ttext=0x100000  #-s
 
 cc_includes := -include include/globl.h $(addprefix -I, $(include_dir)) 
@@ -44,7 +44,7 @@ run:	$(image)
 .PHONY:	 qemu vbox bochs
 
 qemu:	$(image)
-	@[ `which qemu` ] && qemu -fda $(image) -boot a -m 32
+	@[ `which qemu` ] && qemu -fda $(image) -boot a -m 32 -ctrl-grab -net nic,model=rtl8139
 
 vbox:	$(image)
 	@[ `which VBoxManage` ] && VBoxManage startvm $(vbox_name);
