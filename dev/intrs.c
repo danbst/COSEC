@@ -104,6 +104,7 @@ inline void irq_set_handler(uint32_t irq_num, intr_handler_f handler) {
 
 void irq_stub() {
     //
+    k_printf("#IRQ?");
 }
 
 void irq_slave() {

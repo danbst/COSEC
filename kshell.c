@@ -158,7 +158,7 @@ void kshell_panic();
 
 struct kshell_command main_commands[] = {
     {   .name = "info",     .worker = kshell_info,  .description = "various info", .options = "stack gdt pmem colors cpu" },
-    {   .name = "test",     .worker = kshell_test,  .description = "test utility", .options = "sprintf timer" },
+    {   .name = "test",     .worker = kshell_test,  .description = "test utility", .options = "sprintf timer serial" },
     {   .name = "mem",      .worker = kshell_mem,   .description = "mem <start_addr> <size = 0x100>" },
     {   .name = "panic",    .worker = kshell_panic, .description = "test The Red Screen of Death"     },
     {   .name = "help",     .worker = kshell_help,  .description = "show this help"   },
@@ -222,8 +222,10 @@ void kshell_test(struct kshell_command *this, const char *cmdline) {
         test_sprintf();
     else if (!strncmp(cmdline, "timer", 5)) 
         test_timer();
+    else if (!strncmp(cmdline, "serial", 6))
+        test_serial();
     else {
-        k_printf("options are %s\n\n", this->options);
+        k_printf("Options: %s\n\n", this->options);
     }
 }
 

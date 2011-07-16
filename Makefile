@@ -8,7 +8,7 @@ as  :=  gcc
 ld  :=  ld
 
 cc_flags    := -ffreestanding -nostdinc -nostdlib -Wall -Wextra -Winline -O2 -MD 
-as_flags    := -Wall -MD $(addprefix -I, $(include_dir)) -O2
+as_flags    := -Wall -MD $(addprefix -I, $(include_dir))
 ld_flags    := -static -nostdlib -Ttext=0x100000  #-s
 
 cc_includes := -include include/globl.h $(addprefix -I, $(include_dir)) 
@@ -29,28 +29,33 @@ objs		:= $(patsubst $(src_dir)/%.c, $(build)/%.o, $(objs))
 kernel      := kernel
 
 mnt_dir     := mnt
-vbox_name   := COSEC
 image       := cosec.img
 
+vbox_name   := COSEC
+qemu_flags	:= -fda $(image) -boot a -m 32 -net nic,model=rtl8139  -serial pipe:pipe  -ctrl-grab
 log_name	:= fail.log
 objdump     := $(kernel).objd
 
 .PHONY: run mount umount clean
 
-run:	$(image)
+#VBoxManage startvm $(vbox_name) 2>&1 | tee $(log_name);	
+run:
 	@echo "\n#### Running..."
-	@make vbox || make qemu || make bochs
-
-.PHONY:	 qemu vbox bochs
+	@if [ $$DISPLAY ] ; then	\
+		make vbox || make qemu || make bochs || \
+			echo "###Error: VirtualBox, qemu or Bochs must be installed";	\
+	else qemu $(qemu_flags) -curses;	fi
+	
+.PHONY: qemu vbox bochs
 
 qemu:	$(image)
-	@[ `which qemu` ] && qemu -fda $(image) -boot a -m 32 -ctrl-grab -net nic,model=rtl8139
+	qemu $(qemu_flags)
 
 vbox:	$(image)
-	@[ `which VBoxManage` ] && VBoxManage startvm $(vbox_name);
+	VBoxManage startvm $(vbox_name)
 
 bochs:	$(image)
-	@[ `which bochs` ] && bochs;
+	bochs
 
 $(image):	$(kernel) 
 	@echo "\n### Check if there is an image"

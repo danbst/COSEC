@@ -6,6 +6,7 @@
 #include <misc/test.h>
 #include <std/string.h>
 #include <std/stdarg.h>
+#include <std/stdio.h>
 #include <dev/timer.h>
 #include <dev/cpu.h>
 
@@ -90,4 +91,78 @@ static void on_timer(uint counter) {
 
 void test_timer(void) {
     timer_push_ontimer(on_timer);
+}
+
+
+#include <dev/serial.h>
+#include <dev/kbd.h>
+#include <dev/screen.h>
+
+bool poll_exit = false;
+
+void on_serial_received(uint8_t b) {
+    k_printf("\n%d<-\n", (uint)b);
+}
+
+static void on_press(uint8_t scan) {
+    if (scan == 1) poll_exit = true;
+
+    char c = translate_from_scan(null, scan);
+    if (c == 0) return;
+
+    while (! serial_is_transmit_empty(COM1_PORT));
+    serial_write(COM1_PORT, c);
+   
+    cprint(c);
+    update_hw_cursor();
+}
+
+void poll_serial() {
+    poll_exit = false;
+    kbd_set_onpress(on_press);
+
+    while (!poll_exit) {
+        if (serial_is_received(COM1_PORT)) {
+            uint8_t b = serial_read(COM1_PORT);
+            cprint(b);
+            update_hw_cursor();
+        }
+    }
+    kbd_set_onpress(null);
+}
+
+void test_serial(void) {
+    k_printf("Use 'q' to quit, 'i' for register info\n");
+    serial_setup();
+
+    poll_serial();
+    return;
+
+    serial_set_on_receive(on_serial_received);
+    while (1) {
+        char c = getchar();      
+        k_printf("%d-", (uint)c);
+
+        if (c == 'q') {
+            k_printf("\n");
+            break;
+        }
+        if (c == 'i') {
+            uint8_t iir;
+            inb(COM1_PORT + 1, iir);
+            k_printf("(IER=%x\t", (uint)iir);
+            inb(COM1_PORT + 2, iir);
+            k_printf("IIR=%x\t", (uint)iir);
+            inb(COM1_PORT + 5, iir);
+            k_printf("LSR=%x\t", (uint)iir);
+            inb(COM1_PORT + 6, iir);
+            k_printf("MSR=%x)", (uint)iir);
+        }
+
+        while (! serial_is_transmit_empty(COM1_PORT));
+        serial_write(COM1_PORT, c);
+
+        k_printf(">  ");
+    }
+    serial_set_on_receive(null);
 }

@@ -10,6 +10,7 @@
 %:include <dev/intrs.h>
 %:include <dev/kbd.h>
 %:include <dev/pci.h>
+%:include <dev/serial.h>
 %:include <dev/timer.h>
 
 %:include <fs/fs.h>
@@ -33,6 +34,7 @@ void kmain(uint32_t magic, struct multiboot_info *mbi)
     /* devices setup */
     timer_setup();
     kbd_setup();
+    serial_setup();
     pci_setup();
 
     multitasking_setup();

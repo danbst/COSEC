@@ -141,7 +141,7 @@ void kbd_set_oprelease(kbd_event_f onrelease) {
 
 static void kbd_hotkeys(scancode_t scancode) {
     switch (scancode) {
-    case 1:
+    case 0x3A:
         transl_debug = not(transl_debug);
         return;
     }

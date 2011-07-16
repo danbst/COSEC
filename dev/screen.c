@@ -220,6 +220,8 @@ void k_printf(const char *fmt, ...) {
                     cprint(*(c++));
 				args = (void *)((char *)args + 4);
                 } break;
+            case 'c': {
+                }
 			default:
 				cprint(*s);
 			}
