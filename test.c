@@ -100,12 +100,27 @@ void test_timer(void) {
 
 bool poll_exit = false;
 
+inline static print_serial_info(uint16_t port) {
+    uint8_t iir;
+    inb(COM1_PORT + 1, iir);
+    k_printf("(IER=%x\t", (uint)iir);
+    inb(COM1_PORT + 2, iir);
+    k_printf("IIR=%x\t", (uint)iir);
+    inb(COM1_PORT + 5, iir);
+    k_printf("LSR=%x\t", (uint)iir);
+    inb(COM1_PORT + 6, iir);
+    k_printf("MSR=%x)", (uint)iir);
+}
+
 void on_serial_received(uint8_t b) {
     k_printf("\n%d<-\n", (uint)b);
 }
 
 static void on_press(uint8_t scan) {
-    if (scan == 1) poll_exit = true;
+    if (scan == 1) 
+        poll_exit = true;
+    if (scan == 0x53) 
+        print_serial_info(COM1_PORT);
 
     char c = translate_from_scan(null, scan);
     if (c == 0) return;
@@ -132,32 +147,18 @@ void poll_serial() {
 }
 
 void test_serial(void) {
-    k_printf("Use 'q' to quit, 'i' for register info\n");
+    k_printf("Use <Esc> to quit, <Del> for register info\n");
     serial_setup();
 
     poll_serial();
     return;
 
+/*    
+    // interrupt mode is being debugged
     serial_set_on_receive(on_serial_received);
     while (1) {
         char c = getchar();      
         k_printf("%d-", (uint)c);
-
-        if (c == 'q') {
-            k_printf("\n");
-            break;
-        }
-        if (c == 'i') {
-            uint8_t iir;
-            inb(COM1_PORT + 1, iir);
-            k_printf("(IER=%x\t", (uint)iir);
-            inb(COM1_PORT + 2, iir);
-            k_printf("IIR=%x\t", (uint)iir);
-            inb(COM1_PORT + 5, iir);
-            k_printf("LSR=%x\t", (uint)iir);
-            inb(COM1_PORT + 6, iir);
-            k_printf("MSR=%x)", (uint)iir);
-        }
 
         while (! serial_is_transmit_empty(COM1_PORT));
         serial_write(COM1_PORT, c);
@@ -165,4 +166,5 @@ void test_serial(void) {
         k_printf(">  ");
     }
     serial_set_on_receive(null);
+    */
 }
