@@ -149,11 +149,12 @@ void poll_serial() {
 }
 
 void test_serial(void) {
+    uint8_t saved_color = get_cursor_attr();
     k_printf("Use <Esc> to quit, <Del> for register info\n");
     serial_setup();
 
     poll_serial();
-    set_cursor_attr(0x07);
+    set_cursor_attr(saved_color);
     return;
 
 /*    

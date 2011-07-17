@@ -33,10 +33,10 @@ image       := cosec.img
 
 log_name	:= fail.log
 objdump     := $(kernel).objd
-pipe_file	:= pipe
+pipe_file	:= com
 
 vbox_name   := COSEC
-qemu_flags	:= -fda $(image) -boot a -m 32 -net nic,model=rtl8139  -serial pipe:$(pipe_file)  -ctrl-grab
+qemu_flags	:= -fda $(image) -boot a -m 32 -net nic,model=rtl8139  -ctrl-grab
 
 .PHONY: run mount umount clean
 
@@ -50,8 +50,11 @@ run:
 	
 .PHONY: qemu vbox bochs
 
-qemu:	$(image) $(pipe_file)
-	qemu $(qemu_flags)
+qemu:	$(image) 
+	@if [ -S $(pipe_file) ]; 							\
+	then qemu $(qemu_flags) -serial unix:$(pipe_file);	\
+	else qemu $(qemu_flags);							\
+	fi 
 
 vbox:	$(image)
 	VBoxManage startvm $(vbox_name)
