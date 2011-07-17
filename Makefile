@@ -73,11 +73,7 @@ $(image):	$(kernel)
 		echo -e "[ready]\n";	\
 	fi
 	@if [ ! -d $(build) ]; then mkdir $(build); fi
-	@make mount
-	@if [ -r $(build)/$(kernel) ]; then from=$(build)/$(kernel);	\
-	else if [ -r $(kernel) ]; then from=$(kernel); fi; fi;	\
-	sudo cp $$from $(mnt_dir) && echo "\n### Copied"
-	@make umount
+	@make mount && [ -r $(build)/$(kernel) ] && sudo cp $(build)/$(kernel) $(mnt_dir) && echo "\n### Copied" && make umount
 
 mount:  
 	@mkdir -p $(mnt_dir)
