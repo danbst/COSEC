@@ -18,6 +18,16 @@ int strncmp(const char *s1, const char *s2, size_t n) {
     return 0;
 }
 
+char *strcpy(char *dest, const char *src) {
+    arch_strncpy(dest, src, 0xFFFFFFFF);
+    return dest;
+}
+
+char *strncpy(char *dest, const char *src, size_t n) {
+    arch_strncpy(dest, src, n);
+    return dest;
+}
+
 inline int strlen(const char *s) {
     const char *c = s;
     while (*c) ++c;

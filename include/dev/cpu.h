@@ -97,6 +97,12 @@ typedef struct {
     asm("rep movsb");                       \
 }
 
+#define arch_strncpy(dst, src, n) {         \
+    asm("movl %0, %%edi \n" : : "r"(dst));  \
+    asm("movl %0, %%esi \n" : : "r"(src));  \
+    asm("movl %0, %%ecx \n" : :"r"(n));     \
+    asm("repnz movsb");                     \
+}
 
 #define thread_hang()   asm volatile ("1:    hlt\n\tjmp 1b\n" ::)
         

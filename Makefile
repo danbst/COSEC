@@ -31,10 +31,12 @@ kernel      := kernel
 mnt_dir     := mnt
 image       := cosec.img
 
-vbox_name   := COSEC
-qemu_flags	:= -fda $(image) -boot a -m 32 -net nic,model=rtl8139  -serial pipe:pipe  -ctrl-grab
 log_name	:= fail.log
 objdump     := $(kernel).objd
+pipe_file	:= pipe
+
+vbox_name   := COSEC
+qemu_flags	:= -fda $(image) -boot a -m 32 -net nic,model=rtl8139  -serial pipe:$(pipe_file)  -ctrl-grab
 
 .PHONY: run mount umount clean
 
@@ -48,7 +50,7 @@ run:
 	
 .PHONY: qemu vbox bochs
 
-qemu:	$(image)
+qemu:	$(image) $(pipe_file)
 	qemu $(qemu_flags)
 
 vbox:	$(image)
@@ -103,6 +105,9 @@ $(build)/%.o : %.c
 $(build)/%.o : $(src_dir)/%.S
 	@echo -n "AS: "
 	$(as) -c $< -o $@ $(as_flags) -MT $(subst .d,.c,$@)
+
+$(pipe_file):
+	mkfifo $(pipe_file)
 
 clean:
 	rm -rf $(build)

@@ -127,7 +127,8 @@ static void on_press(uint8_t scan) {
 
     while (! serial_is_transmit_empty(COM1_PORT));
     serial_write(COM1_PORT, c);
-   
+    
+    set_cursor_attr(0x0C);
     cprint(c);
     update_hw_cursor();
 }
@@ -139,6 +140,7 @@ void poll_serial() {
     while (!poll_exit) {
         if (serial_is_received(COM1_PORT)) {
             uint8_t b = serial_read(COM1_PORT);
+            set_cursor_attr(0x0A);
             cprint(b);
             update_hw_cursor();
         }
@@ -151,6 +153,7 @@ void test_serial(void) {
     serial_setup();
 
     poll_serial();
+    set_cursor_attr(0x07);
     return;
 
 /*    
