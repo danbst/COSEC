@@ -42,8 +42,9 @@ qemu_flags	:= -fda $(image) -boot a -m 32 -net nic,model=rtl8139  -ctrl-grab
 
 #VBoxManage startvm $(vbox_name) 2>&1 | tee $(log_name);	
 run:
-	@echo "\n#### Running..."
-	@if [ $$DISPLAY ] ; then	\
+	
+	@echo "\n#### Running..." && \
+	if [ $$DISPLAY ] ; then	\
 		make vbox || make qemu || make bochs || \
 			echo "###Error: VirtualBox, qemu or Bochs must be installed";	\
 	else qemu $(qemu_flags) -curses;	fi
@@ -73,7 +74,8 @@ $(image):	$(kernel)
 		echo -e "[ready]\n";	\
 	fi
 	@if [ ! -d $(build) ]; then mkdir $(build); fi
-	@make mount && [ -r $(build)/$(kernel) ] && sudo cp $(build)/$(kernel) $(mnt_dir) && echo "\n### Copied" && make umount
+	@make mount && [ -r $(build)/$(kernel) ] && sudo cp $(build)/$(kernel) $(mnt_dir) \
+		&& echo "\n### Copied" && make umount
 
 mount:  
 	@mkdir -p $(mnt_dir)
@@ -88,13 +90,13 @@ $(kernel): $(build) $(objs)
 	@echo -n "LD: "
 	$(ld) -o $(build)/$(kernel)	$(objs) $(ld_flags) 
 	@if [ `which objdump 2>/dev/null` ]; then objdump -d $(build)/$(kernel) > $(objdump); fi
-	@if [ `which ctags 2>/dev/null ` ]; then ctags * -R; fi
+	@if [ `which ctags 2>/dev/null ` ]; then ctags -R *; fi
 	
 $(build):
 	@echo "\n### Compiling..."
 	@mkdir -p $(build)
 	@for d in * ; do		\
-		[ -d $$d ] && mkdir $(build)/$$d || /bin/true;	\
+		[ -d $$d ] && mkdir $(build)/$$d || true;	\
 	done
 	
 $(build)/%.o : %.c

@@ -10,16 +10,17 @@
 #define MSR_OFFSET      6   /* Nodem Status Register */
 #define SCRATCH_REG     7   /* Scratch register */
 
-serial_on_receive_f on_receive = null;
+volatile serial_on_receive_f on_receive = null;
 
 inline void serial_set_on_receive(serial_on_receive_f handler) {
     on_receive = handler;
 }
 
-void serial_irq() {
+volatile void serial_irq() {
     uint8_t iir;
     inb(COM1_PORT + IIFCR_OFFSET, iir);
-    k_printf("IRQ4: IIR=%x\n", (uint)iir);
+    //k_printf("IRQ4: IIR=%x\n", (uint)iir);
+
     if (serial_is_received(COM1_PORT)) {
         uint8_t b = serial_read(COM1_PORT);
         if (on_receive)
@@ -68,8 +69,9 @@ static void serial_configure(uint16_t port, uint8_t speed_divisor) {
     outb(port + IER_OFFSET, 0);
     set_serial_divisor(port, speed_divisor);
     set_serial_bitness(port, 8);     /* 8bit byte */
-    outb(port + IER_OFFSET, 0x0C);   /* enable FIFO, clear, 14b threshold */
-    outb(port + MCR_OFFSET, 0x0B);  /* IRQ enabled, RTS/DSR set */
+    outb(port + IIFCR_OFFSET, 0x07);    
+    outb(port + MCR_OFFSET, 0x08);   /* IRQ enabled, RTS/DSR set */
+    outb(port + IER_OFFSET, 0x0F);   /* enable FIFO, clear, 14b threshold */
 }
 
 inline bool serial_is_received(uint16_t port) {
@@ -96,7 +98,16 @@ inline void serial_write(uint16_t port, uint8_t b) {
 
 void serial_setup(void) {
     /* configure serial interface */
-    serial_configure(COM1_PORT, 1);
+    /*serial_configure(COM1_PORT, 1); */
+
+    outb(COM1_PORT + 1, 0x00);    // Disable all interrupts
+    outb(COM1_PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
+    outb(COM1_PORT + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
+    outb(COM1_PORT + 1, 0x00);    //                  (hi byte)
+    outb(COM1_PORT + 3, 0x03);    // 8 bits, no parity, one stop bit
+    outb(COM1_PORT + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
+    outb(COM1_PORT + 4, 0x0B);    // IRQs enabled, RTS/DSR set
+    outb(COM1_PORT + 1, 0x0F);    // Enable all interrupts
 
     irq_set_handler(4, serial_irq);
 }

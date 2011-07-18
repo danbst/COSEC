@@ -98,7 +98,7 @@ void test_timer(void) {
 #include <dev/kbd.h>
 #include <dev/screen.h>
 
-bool poll_exit = false;
+volatile bool poll_exit = false;
 
 inline static print_serial_info(uint16_t port) {
     uint8_t iir;
@@ -109,14 +109,17 @@ inline static print_serial_info(uint16_t port) {
     inb(COM1_PORT + 5, iir);
     k_printf("LSR=%x\t", (uint)iir);
     inb(COM1_PORT + 6, iir);
-    k_printf("MSR=%x)", (uint)iir);
+    k_printf("MSR=%x", (uint)iir);
+    k_printf("PIC=%x)", (uint)irq_get_mask());
 }
 
 void on_serial_received(uint8_t b) {
-    k_printf("\n%d<-\n", (uint)b);
+    set_cursor_attr(0x0A);
+    cprint(b);
+    update_hw_cursor();
 }
 
-static void on_press(uint8_t scan) {
+static void on_press(scancode_t scan) {
     if (scan == 1) 
         poll_exit = true;
     if (scan == 0x53) 
@@ -140,6 +143,7 @@ void poll_serial() {
     while (!poll_exit) {
         if (serial_is_received(COM1_PORT)) {
             uint8_t b = serial_read(COM1_PORT);
+
             set_cursor_attr(0x0A);
             cprint(b);
             update_hw_cursor();
@@ -149,26 +153,22 @@ void poll_serial() {
 }
 
 void test_serial(void) {
+    irq_mask(true, 4);
+    k_printf("IRQs state = 0x%x\n", (uint)irq_get_mask());
+
     uint8_t saved_color = get_cursor_attr();
     k_printf("Use <Esc> to quit, <Del> for register info\n");
     serial_setup();
 
-    poll_serial();
-    set_cursor_attr(saved_color);
-    return;
-
-/*    
-    // interrupt mode is being debugged
+    //poll_serial();
+    
+    poll_exit = false;
     serial_set_on_receive(on_serial_received);
-    while (1) {
-        char c = getchar();      
-        k_printf("%d-", (uint)c);
+    kbd_set_onpress(on_press);
 
-        while (! serial_is_transmit_empty(COM1_PORT));
-        serial_write(COM1_PORT, c);
+    while (!poll_exit) cpu_halt();
 
-        k_printf(">  ");
-    }
+    kbd_set_onpress(null);
     serial_set_on_receive(null);
-    */
+    set_cursor_attr(saved_color);
 }

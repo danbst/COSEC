@@ -236,6 +236,8 @@ void kshell_mem(struct kshell_command *this, const char *arg) {
     k_printf("\n");
 }
 
+#include <dev/kbd.h>
+
 void kshell_test(struct kshell_command *this, const char *cmdline) {
     if (!strncmp(cmdline, "sprintf", 4)) 
         test_sprintf();
@@ -243,6 +245,10 @@ void kshell_test(struct kshell_command *this, const char *cmdline) {
         test_timer();
     else if (!strncmp(cmdline, "serial", 6))
         test_serial();
+    else if (!strncmp(cmdline, "scan", 4)) {
+        scancode_t scan = kbd_wait_scan();
+        k_printf("scancode: 0x%x\n", (uint)scan);
+    }
     else {
         k_printf("Options: %s\n\n", this->options);
     }
