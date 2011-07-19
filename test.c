@@ -113,10 +113,16 @@ inline static print_serial_info(uint16_t port) {
     k_printf("PIC=%x)", (uint)irq_get_mask());
 }
 
+#define k_printc(c, attr)   {\
+    set_cursor_attr(attr);  cprint(c);  update_hw_cursor(); \
+}
+
 void on_serial_received(uint8_t b) {
-    set_cursor_attr(0x0A);
-    cprint(b);
-    update_hw_cursor();
+    k_printc(b, 0x0A);
+    while (serial_is_received(COM1_PORT)) {
+        b = serial_read(COM1_PORT);
+        k_printc(b, 0x0A);
+    }
 }
 
 static void on_press(scancode_t scan) {
@@ -131,9 +137,7 @@ static void on_press(scancode_t scan) {
     while (! serial_is_transmit_empty(COM1_PORT));
     serial_write(COM1_PORT, c);
     
-    set_cursor_attr(0x0C);
-    cprint(c);
-    update_hw_cursor();
+    k_printc(c, 0x0C);
 }
 
 void poll_serial() {
@@ -144,9 +148,7 @@ void poll_serial() {
         if (serial_is_received(COM1_PORT)) {
             uint8_t b = serial_read(COM1_PORT);
 
-            set_cursor_attr(0x0A);
-            cprint(b);
-            update_hw_cursor();
+            k_printc(b, 0x0A);
         }
     }
     kbd_set_onpress(null);
